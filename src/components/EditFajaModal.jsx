@@ -50,6 +50,7 @@ const EditFajaModal = ({ editingFaja, setEditingFaja, handleUpdate, companies })
                     type="date"
                     name="fecha"
                     value={editingFaja.fecha}
+                    placeholder="Seleccionar fecha" // Placeholder para la guía visual
                     onChange={(e) =>
                       setEditingFaja({ ...editingFaja, fecha: e.target.value })
                     }

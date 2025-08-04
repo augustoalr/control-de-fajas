@@ -21,12 +21,23 @@ const AddFajaForm = ({ newFaja, handleInputChange, handleSubmit, companies }) =>
               />
             </Col>
             <Col md={3}>
-              <Form.Control
-                type="date"
-                name="fecha"
-                value={newFaja.fecha}
-                onChange={handleInputChange}
-              />
+              <InputGroup>
+                <Form.Control
+                  type="date"
+                  name="fecha"
+                  value={newFaja.fecha}
+                  onChange={handleInputChange}
+                  placeholder="Seleccionar fecha" // Placeholder para la guía visual
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() =>
+                    handleInputChange({ target: { name: "fecha", value: "" } })
+                  }
+                >
+                  &#x2715;
+                </Button>
+              </InputGroup>
             </Col>
             <Col md={3}>
               <Form.Select
