@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -29,9 +28,7 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    alias: {
-      '@supabase/supabase-js': path.resolve(__dirname, 'node_modules/@supabase/supabase-js'),
-    },
+  optimizeDeps: {
+    include: ['@supabase/supabase-js'],
   },
 });
