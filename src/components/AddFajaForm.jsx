@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap';
 
 const AddFajaForm = ({ newFaja, handleInputChange, handleSubmit, companies }) => {
   return (
