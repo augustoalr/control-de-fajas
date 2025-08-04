@@ -15,19 +15,16 @@ const EditFajaModal = ({ editingFaja, setEditingFaja, handleUpdate, companies })
         <Form onSubmit={handleUpdate}>
           <Row className="g-3">
             <Col md={6}>
-              <Form.Group>
-                <Form.Label>Número / ID</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="numero"
-                  value={editingFaja.numero}
-                  onChange={(e) =>
-                    setEditingFaja({ ...editingFaja, numero: e.target.value })
-                  }
-                  placeholder="Número / ID"
-                />
-              </Form.Group>
-            </Col>
+                  <Form.Group>
+                    <Form.Label>ID</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={editingFaja.id}
+                      readOnly
+                      disabled
+                    />
+                  </Form.Group>
+                </Col>
             <Col md={6}>
               <Form.Group>
                 <Form.Label>Nombre del Cliente</Form.Label>

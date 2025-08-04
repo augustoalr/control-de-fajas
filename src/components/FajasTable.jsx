@@ -31,7 +31,7 @@ const FajasTable = ({ fajas, handleEdit, handleDelete, activeTab }) => {
                   {fajas.length > 0 ? (
                     fajas.map((faja) => (
                       <tr key={faja.id}>
-                        <td>{faja.numero}</td>
+                        <td>{faja.id}</td>
                         <td>{faja.clientName}</td>
                         <td>{faja.fecha}</td>
                         <td>{faja.company}</td>
