@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import ExcelJS from 'exceljs';
 import { Toaster, toast } from 'react-hot-toast';
+import { supabase } from './supabaseClient';
 
 const FajasTable = lazy(() => import('./components/FajasTable'));
 const AddFajaForm = lazy(() => import('./components/AddFajaForm'));
@@ -13,30 +14,9 @@ const CompanyModal = lazy(() => import('./components/CompanyModal'));
 const ExportModal = lazy(() => import('./components/ExportModal'));
 
 function App() {
-  // --- ESTADOS ---
-  const getInitialState = (key, defaultValue) => {
-    try {
-      const storedValue = localStorage.getItem(key);
-      return storedValue ? JSON.parse(storedValue) : defaultValue;
-    } catch (error) {
-      console.error(`Error reading from localStorage for key "${key}":`, error);
-      toast.error('Error al leer datos guardados.');
-      return defaultValue;
-    }
-  };
-
-  const [fajas, setFajas] = useState(() => getInitialState('fajas_inventory', []));
-  const predefinedCompanies = [
-    'Europack', 'Biobela', 'New Colombian', 'Amazon', 'Aura', 'Aurafix',
-    'Dres elci', 'Lipolastic', 'Just one', 'U-Desing', 'Generic', 'Macom',
-    'My body', 'Salome', 'Old Salome'
-  ];
-
-  const [companies, setCompanies] = useState(() => {
-    const savedCompanies = getInitialState('fajas_companies', []);
-    const allCompanies = [...new Set([...predefinedCompanies, ...savedCompanies])];
-    return allCompanies;
-  });
+  const [fajas, setFajas] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -45,9 +25,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
   const [newFaja, setNewFaja] = useState({
-    numero: '',
     clientName: '',
-    fecha: new Date().toISOString().slice(0, 10),
+    fecha: '',
     company: '',
     model: '',
     code: '',
@@ -56,27 +35,33 @@ function App() {
   });
   const [activeTab, setActiveTab] = useState('stock');
 
-  // --- EFECTOS (CARGA/GUARDADO) ---
   useEffect(() => {
-    try {
-      localStorage.setItem('fajas_inventory', JSON.stringify(fajas));
-    } catch (error) {
-      console.error("Error saving fajas to localStorage:", error);
-      toast.error('No se pudo guardar el inventario.');
+    fetchFajas();
+    fetchCompanies();
+  }, []);
+
+  async function fetchFajas() {
+    setLoading(true);
+    const { data, error } = await supabase.from('fajas').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching fajas:', error);
+      toast.error('Error al cargar el inventario.');
+    } else {
+      setFajas(data);
     }
-  }, [fajas]);
+    setLoading(false);
+  }
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('fajas_companies', JSON.stringify(companies));
-    } catch (error) {
-      console.error("Error saving companies to localStorage:", error);
-      toast.error('No se pudieron guardar las compañías.');
+  async function fetchCompanies() {
+    const { data, error } = await supabase.from('companies').select('name');
+    if (error) {
+      console.error('Error fetching companies:', error);
+      toast.error('Error al cargar las compañías.');
+    } else {
+      setCompanies(data.map(c => c.name));
     }
-  }, [companies]);
+  }
 
-
-  // --- LÓGICA DE FILTRADO ---
   const filteredFajas = useMemo(() => {
     const stockFajas = fajas.filter(faja => !faja.paid);
     const soldFajas = fajas.filter(faja => faja.paid);
@@ -104,41 +89,69 @@ function App() {
     setEditingFaja(faja);
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    setFajas(fajas.map(f => f.id === editingFaja.id ? editingFaja : f));
-    setEditingFaja(null);
-    toast.success('Faja actualizada con éxito.');
+    const { id, ...fajaToUpdate } = editingFaja;
+    //Si la fecha esta vacía, envíala como null
+    fajaToUpdate.fecha = fajaToUpdate.fecha || null;
+    
+    // Actualizar la faja en la base de datos
+    const { error } = await supabase.from('fajas').update(fajaToUpdate).eq('id', id);
+    if (error) {
+      console.error('Error updating faja:', error);
+      toast.error('Error al actualizar la faja.');
+    } else {
+      toast.success('Faja actualizada con éxito.');
+      setEditingFaja(null);
+      fetchFajas(); // Re-fetch to update UI
+    }
   };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewFaja(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // --- Lógica para el número automático ---
-    const newNumero = fajas.length > 0 ? Math.max(...fajas.map(f => f.numero)) + 1 : 1;
-
-    setFajas(prev => [...prev, { ...newFaja, id: Date.now(), numero: newNumero }]);
-    setNewFaja({ numero: '', clientName: '', fecha: '', company: '', model: '', code: '', size: '', paid: false });
-    setActiveTab('stock');
-    toast.success('Faja agregada al inventario.');
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('¿Seguro que quieres eliminar este registro?')) {
-      setFajas(fajas.filter(faja => faja.id !== id));
-      toast.success('Registro eliminado correctamente.');
+    const fajaToInsert = { ...newFaja, fecha: newFaja.fecha || null };
+    const { error } = await supabase.from('fajas').insert([fajaToInsert]);
+    if (error) {
+      console.error('Error inserting faja:', error);
+      toast.error('Error al agregar la faja.');
+    } else {
+      toast.success('Faja agregada al inventario.');
+      setNewFaja({ clientName: '', fecha: '', company: '', model: '', code: '', size: '', paid: false });
+      setActiveTab('stock');
+      fetchFajas(); // Re-fetch to update UI
     }
   };
 
-  const handleCompanySubmit = (e) => {
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Seguro que quieres eliminar este registro?')) {
+      const { error } = await supabase.from('fajas').delete().eq('id', id);
+      if (error) {
+        console.error('Error deleting faja:', error);
+        toast.error('Error al eliminar el registro.');
+      } else {
+        toast.success('Registro eliminado correctamente.');
+        fetchFajas(); // Re-fetch to update UI
+      }
+    }
+  };
+
+  const handleCompanySubmit = async (e) => {
     e.preventDefault();
     if (newCompanyName && !companies.includes(newCompanyName)) {
-      setCompanies(prevCompanies => [...prevCompanies, newCompanyName]);
-      setNewCompanyName('');
-      toast.success('Compañía agregada.');
+      const { error } = await supabase.from('companies').insert([{ name: newCompanyName }]);
+      if (error) {
+        console.error('Error inserting company:', error);
+        toast.error('Error al agregar la compañía.');
+      } else {
+        setNewCompanyName('');
+        toast.success('Compañía agregada.');
+        fetchCompanies(); // Re-fetch to update UI
+      }
     }
   };
 
@@ -150,14 +163,20 @@ function App() {
     setShowDeleteConfirmation(true);
   };
 
-  const confirmCompanyDelete = () => {
-    setCompanies(companies.filter(c => c !== companyToDelete));
-    setShowDeleteConfirmation(false);
-    setCompanyToDelete(null);
-    toast.success('Compañía eliminada.');
+  const confirmCompanyDelete = async () => {
+    const { error } = await supabase.from('companies').delete().eq('name', companyToDelete);
+    if (error) {
+      console.error('Error deleting company:', error);
+      toast.error('Error al eliminar la compañía.');
+    } else {
+      setShowDeleteConfirmation(false);
+      setCompanyToDelete(null);
+      toast.success('Compañía eliminada.');
+      fetchCompanies(); // Re-fetch to update UI
+    }
   };
 
-  // --- LÓGICA DE EXPORTACIÓN ---
+  // --- LÓGICA DE EXPORTACIÓN (sin cambios) ---
   const getExportData = () => {
     return { fajas };
   };
@@ -327,39 +346,7 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  // --- COPIA DE SEGURIDAD ---
-  const handleBackup = () => {
-    const data = JSON.stringify({ fajas, companies });
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `backup_fajas_${new Date().toLocaleDateString()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    toast.success('Copia de seguridad generada.');
-  };
-
-  const handleRestore = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (data.fajas && data.companies) {
-          setFajas(data.fajas);
-          setCompanies(data.companies);
-          toast.success('Copia de seguridad restaurada con éxito.');
-        } else {
-          toast.error('El archivo de copia de seguridad no es válido.');
-        }
-      } catch {
-        toast.error('Error al leer el archivo de copia de seguridad.');
-      }
-    };
-    reader.readAsText(file);
-  };
+  // Las funciones de Backup y Restore ya no son necesarias con Supabase
 
   return (
     <div className="container mt-4 mb-5">
@@ -373,11 +360,6 @@ function App() {
           <Button variant="danger" onClick={() => setShowExportModal(true)}>Exportar ventas</Button>
           <Button variant="success" onClick={handleExportExcel}>Exportar a Excel</Button>
           <Button variant="primary" onClick={handleExportStockPDF}>Exportar Stock</Button>
-          <Button variant="info" onClick={handleBackup}>Copia de Seguridad</Button>
-          <Form.Label className="btn btn-warning mb-0">
-            Restaurar Copia
-            <Form.Control type="file" accept=".json" onChange={handleRestore} hidden />
-          </Form.Label>
           <Button variant="secondary" onClick={() => setShowCompanyModal(true)}>Gestionar Compañías</Button>
         </div>
       </header>
@@ -394,83 +376,91 @@ function App() {
         </Nav.Item>
       </Nav>
 
-      <Suspense fallback={<div>Cargando...</div>}>
-        {activeTab === 'add' && (
-          <AddFajaForm 
-            newFaja={newFaja} 
-            handleInputChange={handleInputChange} 
-            handleSubmit={handleSubmit} 
-            companies={companies} 
-          />
-        )}
-
-        {(activeTab === 'stock' || activeTab === 'sold') && (
-          <>
-            <div className="card mb-4 shadow-sm">
-              <div className="card-body">
-                <Row className="g-3 align-items-center">
-                  <Col md={4}>
-                    <InputGroup>
-                      <Form.Control
-                        type="text"
-                        placeholder={activeTab === 'stock' ? 'Buscar en stock...' : 'Buscar en vendidas...'}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </InputGroup>
-                  </Col>
-                  {activeTab === 'sold' && (
-                    <Col md={3}>
-                      <Form.Control
-                        type="month"
-                        value={monthFilter}
-                        onChange={(e) => setMonthFilter(e.target.value)}
-                      />
-                    </Col>
-                  )}
-                </Row>
-              </div>
-            </div>
-            <FajasTable 
-              fajas={filteredFajas} 
-              handleEdit={handleEdit} 
-              handleDelete={handleDelete} 
-              activeTab={activeTab} 
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+        </div>
+      ) : (
+        <Suspense fallback={<div>Cargando...</div>}>
+          {activeTab === 'add' && (
+            <AddFajaForm 
+              newFaja={newFaja} 
+              handleInputChange={handleInputChange} 
+              handleSubmit={handleSubmit} 
+              companies={companies} 
             />
-          </>
-        )}
+          )}
 
-        {editingFaja && (
-          <EditFajaModal 
-            editingFaja={editingFaja} 
-            setEditingFaja={setEditingFaja} 
-            handleUpdate={handleUpdate} 
-            companies={companies} 
-          />
-        )}
+          {(activeTab === 'stock' || activeTab === 'sold') && (
+            <>
+              <div className="card mb-4 shadow-sm">
+                <div className="card-body">
+                  <Row className="g-3 align-items-center">
+                    <Col md={4}>
+                      <InputGroup>
+                        <Form.Control
+                          type="text"
+                          placeholder={activeTab === 'stock' ? 'Buscar en stock...' : 'Buscar en vendidas...'}
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </InputGroup>
+                    </Col>
+                    {activeTab === 'sold' && (
+                      <Col md={3}>
+                        <Form.Control
+                          type="month"
+                          value={monthFilter}
+                          onChange={(e) => setMonthFilter(e.target.value)}
+                        />
+                      </Col>
+                    )}
+                  </Row>
+                </div>
+              </div>
+              <FajasTable 
+                fajas={filteredFajas} 
+                handleEdit={handleEdit} 
+                handleDelete={handleDelete} 
+                activeTab={activeTab} 
+              />
+            </>
+          )}
 
-        {showCompanyModal && (
-          <CompanyModal 
-            show={showCompanyModal} 
-            handleHide={() => setShowCompanyModal(false)} 
-            newCompanyName={newCompanyName} 
-            setNewCompanyName={setNewCompanyName} 
-            handleCompanySubmit={handleCompanySubmit} 
-            companies={companies} 
-            handleCompanyDelete={handleCompanyDelete} 
-          />
-        )}
+          {editingFaja && (
+            <EditFajaModal 
+              editingFaja={editingFaja} 
+              setEditingFaja={setEditingFaja} 
+              handleUpdate={handleUpdate} 
+              companies={companies} 
+            />
+          )}
 
-        {showExportModal && (
-          <ExportModal 
-            show={showExportModal} 
-            handleHide={() => setShowExportModal(false)} 
-            exportMonth={exportMonth} 
-            setExportMonth={setExportMonth} 
-            handleExportPDF={handleExportPDF} 
-          />
-        )}
-      </Suspense>
+          {showCompanyModal && (
+            <CompanyModal 
+              show={showCompanyModal} 
+              handleHide={() => setShowCompanyModal(false)} 
+              newCompanyName={newCompanyName} 
+              setNewCompanyName={setNewCompanyName} 
+              handleCompanySubmit={handleCompanySubmit} 
+              companies={companies} 
+              handleCompanyDelete={handleCompanyDelete} 
+            />
+          )}
+
+          {showExportModal && (
+            <ExportModal 
+              show={showExportModal} 
+              handleHide={() => setShowExportModal(false)} 
+              exportMonth={exportMonth} 
+              setExportMonth={setExportMonth} 
+              handleExportPDF={handleExportPDF} 
+            />
+          )}
+        </Suspense>
+      )}
 
       {/* Modal de Confirmación para Eliminar Compañía */}
       <Modal show={showDeleteConfirmation} onHide={() => setShowDeleteConfirmation(false)} centered>
