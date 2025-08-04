@@ -1,12 +1,6 @@
-//Error en vite.config.js
-  resolve: {
-    alias: {
-      '@supabase/supabase-js': path.resolve(__dirname, 'node_modules/@supabase/supabase-js/dist/index.mjs'), //DICE QUE _dirname no esta defenido
-    },
-  },
-});
-
-
+control-de-fajas.vercel.app/:1  Uncaught TypeError: Failed to resolve module specifier "@supabase/supabase-js". Relative references must start with either "/", "./", or "../".
+/favicon.ico:1   Failed to load resource: the server responded with a status of 404 ()
+control-de-fajas.vercel.app/:1  Error while trying to use the following icon from the Manifest: https://control-de-fajas.vercel.app/pwa-192x192.png (Download error or resource isn't a valid image)
 
 
 [13:55:26.465] Running build in Washington, D.C., USA (East) – iad1

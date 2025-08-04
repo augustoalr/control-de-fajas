@@ -8,6 +8,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { supabase } from './supabaseClient';
 
 
+
 const FajasTable = lazy(() => import('./components/FajasTable'));
 const AddFajaForm = lazy(() => import('./components/AddFajaForm'));
 const EditFajaModal = lazy(() => import('./components/EditFajaModal'));
