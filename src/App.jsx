@@ -65,8 +65,8 @@ function App() {
   }
 
   const filteredFajas = useMemo(() => {
-    const stockFajas = fajas.filter(faja => !faja.paid);
-    const soldFajas = fajas.filter(faja => faja.paid);
+    const stockFajas = fajas.filter(faja => String(faja.paid) === 'false' || faja.paid === null || faja.paid === undefined);
+    const soldFajas = fajas.filter(faja => String(faja.paid) === 'true' || faja.paid === 'I');
 
     const filterLogic = (faja) => {
       const fajaDate = new Date(faja.fecha);
@@ -96,7 +96,10 @@ function App() {
     const { id, ...fajaToUpdate } = editingFaja;
     //Si la fecha esta vacía, envíala como null
     fajaToUpdate.fecha = fajaToUpdate.fecha || null;
-    
+
+    if (fajaToUpdate.paid === 'true') fajaToUpdate.paid = true;
+    else if (fajaToUpdate.paid === 'false') fajaToUpdate.paid = false;
+
     // Actualizar la faja en la base de datos
     const { error } = await supabase.from('fajas').update(fajaToUpdate).eq('id', id);
     if (error) {
@@ -111,12 +114,22 @@ function App() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setNewFaja(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    let finalValue = type === 'checkbox' ? checked : value;
+    if (name === 'paid') {
+      if (value === 'true') finalValue = true;
+      else if (value === 'false') finalValue = false;
+      else finalValue = value; // Mantener 'I' como string
+    }
+    setNewFaja(prev => ({ ...prev, [name]: finalValue }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const fajaToInsert = { ...newFaja, fecha: newFaja.fecha || null };
+
+    if (fajaToInsert.paid === 'true') fajaToInsert.paid = true;
+    else if (fajaToInsert.paid === 'false') fajaToInsert.paid = false;
+
     const { error } = await supabase.from('fajas').insert([fajaToInsert]);
     if (error) {
       console.error('Error inserting faja:', error);
@@ -137,6 +150,19 @@ function App() {
         toast.error('Error al eliminar el registro.');
       } else {
         toast.success('Registro eliminado correctamente.');
+        fetchFajas(); // Re-fetch to update UI
+      }
+    }
+  };
+
+  const handleDeleteSelected = async (selectedIds) => {
+    if (window.confirm(`¿Seguro que quieres eliminar ${selectedIds.length} registros seleccionados?`)) {
+      const { error } = await supabase.from('fajas').delete().in('id', selectedIds);
+      if (error) {
+        console.error('Error deleting selected fajas:', error);
+        toast.error('Error al eliminar los registros seleccionados.');
+      } else {
+        toast.success('Registros seleccionados eliminados correctamente.');
         fetchFajas(); // Re-fetch to update UI
       }
     }
@@ -189,8 +215,9 @@ function App() {
 
     const soldThisMonth = fajas.filter(f => {
       const fajaDate = new Date(f.fecha);
+      const isSold = String(f.paid) === 'true' || f.paid === 'I';
       return (
-        f.paid &&
+        isSold &&
         fajaDate.getFullYear() === parseInt(year) &&
         (fajaDate.getMonth() + 1) === parseInt(month)
       );
@@ -199,7 +226,12 @@ function App() {
     const doc = new jsPDF({ orientation: 'landscape' });
     const tableProps = { headStyles: { fillColor: [41, 128, 185] } };
     const columns = ["Nº", "name", "date", "company", "model", "code", "size", "paid"];
-    const mapData = (f, index) => [index + 1, f.clientName, f.fecha, f.company, f.model, f.code, f.size, f.paid ? 'Yes' : 'No'];
+    const mapData = (f, index) => {
+      let paidStatus = 'No';
+      if (String(f.paid) === 'true') paidStatus = 'Si';
+      if (f.paid === 'I') paidStatus = 'Gratis';
+      return [index + 1, f.clientName, f.fecha, f.company, f.model, f.code, f.size, paidStatus];
+    };
     let finalY = 15;
 
     doc.text(`Sales - ${month}/${year}`, 14, finalY);
@@ -253,8 +285,8 @@ function App() {
     const { fajas } = getExportData();
     const workbook = new ExcelJS.Workbook();
 
-    const stock = fajas.filter(f => !f.paid);
-    const sold = fajas.filter(f => f.paid);
+    const stock = fajas.filter(f => String(f.paid) === 'false' || f.paid === null || f.paid === undefined);
+    const sold = fajas.filter(f => String(f.paid) === 'true' || f.paid === 'I');
 
     const createSheet = (sheetName, data) => {
       const worksheet = workbook.addWorksheet(sheetName, {
@@ -272,16 +304,21 @@ function App() {
         { header: 'Paid', key: 'paid' }
       ];
 
-      const mappedData = data.map((f, index) => ({
-        numero: index + 1,
-        clientName: f.clientName,
-        fecha: f.fecha,
-        company: f.company,
-        model: f.model,
-        code: f.code,
-        size: f.size,
-        paid: f.paid ? 'Yes' : 'No'
-      }));
+      const mappedData = data.map((f, index) => {
+        let paidStatus = 'No';
+        if (String(f.paid) === 'true') paidStatus = 'Si';
+        if (f.paid === 'I') paidStatus = 'Gratis';
+        return {
+          numero: index + 1,
+          clientName: f.clientName,
+          fecha: f.fecha,
+          company: f.company,
+          model: f.model,
+          code: f.code,
+          size: f.size,
+          paid: paidStatus
+        };
+      });
       worksheet.addRows(mappedData);
 
       worksheet.columns.forEach(column => {
@@ -426,6 +463,7 @@ function App() {
                 fajas={filteredFajas} 
                 handleEdit={handleEdit} 
                 handleDelete={handleDelete} 
+                handleDeleteSelected={handleDeleteSelected}
                 activeTab={activeTab} 
               />
             </>

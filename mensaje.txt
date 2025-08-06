@@ -1,0 +1,4 @@
+Perfecto. Ahora que he modificado FajasTable.jsx, necesito actualizar App.jsx para manejar la lógica de eliminación múltiple.
+  Esto implicará agregar una nueva función handleDeleteSelected y pasarla como prop a FajasTable.
+
+  Primero, leeré el contenido de App.jsx para asegurarme de que estoy trabajando con la última versión.

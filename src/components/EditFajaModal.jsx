@@ -131,16 +131,18 @@ const EditFajaModal = ({ editingFaja, setEditingFaja, handleUpdate, companies })
               </Form.Group>
             </Col>
             <Col md={12}>
-              <Form.Check
-                type="checkbox"
+              <Form.Select
                 name="paid"
-                checked={editingFaja.paid}
+                value={editingFaja.paid}
                 onChange={(e) =>
-                  setEditingFaja({ ...editingFaja, paid: e.target.checked })
+                  setEditingFaja({ ...editingFaja, paid: e.target.value })
                 }
-                label="Pagado"
-                id="editPaidCheck"
-              />
+                id="editPaidSelect"
+              >
+                <option value="false">No Pagado</option>
+                <option value="true">Pagado</option>
+                <option value="I">Gratis</option>
+              </Form.Select>
             </Col>
             <Col md={12} className="text-end">
               <Button type="submit" variant="primary">

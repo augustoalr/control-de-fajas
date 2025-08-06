@@ -1,60 +1,9 @@
-control-de-fajas.vercel.app/:1  Uncaught TypeError: Failed to resolve module specifier "@supabase/supabase-js". Relative references must start with either "/", "./", or "../".
-/favicon.ico:1   Failed to load resource: the server responded with a status of 404 ()
-control-de-fajas.vercel.app/:1  Error while trying to use the following icon from the Manifest: https://control-de-fajas.vercel.app/pwa-192x192.png (Download error or resource isn't a valid image)
-
-
-[13:55:26.465] Running build in Washington, D.C., USA (East) – iad1
-[13:55:26.466] Build machine configuration: 2 cores, 8 GB
-[13:55:26.505] Cloning github.com/augustoalr/control-de-fajas (Branch: main, Commit: ea319bc)
-[13:55:26.757] Cloning completed: 252.000ms
-[13:55:27.288] Restored build cache from previous deployment (7DN2g1sa4HBpqvxv38p7dxVhD5Kd)
-[13:55:29.494] Running "vercel build"
-[13:55:29.977] Vercel CLI 44.6.4
-[13:55:30.546] Installing dependencies...
-[13:55:32.604] 
-[13:55:32.605] up to date in 2s
-[13:55:32.605] 
-[13:55:32.605] 126 packages are looking for funding
-[13:55:32.606]   run `npm fund` for details
-[13:55:32.637] Running "npm run build"
-[13:55:32.750] 
-[13:55:32.750] > control-de-fajas@0.0.0 build
-[13:55:32.750] > vite build
-[13:55:32.751] 
-[13:55:33.134] [36mvite v7.0.6 [32mbuilding for production...[36m[39m
-[13:55:33.205] transforming...
-[13:55:35.857] [32m✓[39m 479 modules transformed.
-[13:55:38.965] 
-[13:55:38.966] PWA v1.0.2
-[13:55:38.966] mode      generateSW
-[13:55:38.966] precache  3 entries (0.00 KiB)
-[13:55:38.967] files generated
-[13:55:38.967]   dist/sw.js
-[13:55:38.967]   dist/workbox-5ffe50d4.js
-[13:55:38.968] warnings
-[13:55:38.968]   One of the glob patterns doesn't match any files. Please remove or fix the following: {
-[13:55:38.968]   "globDirectory": "/vercel/path0/dist",
-[13:55:38.968]   "globPattern": "**/*.{js,wasm,css,html}",
-[13:55:38.968]   "globIgnores": [
-[13:55:38.970]     "**/node_modules/**/*",
-[13:55:38.970]     "sw.js",
-[13:55:38.971]     "workbox-*.js"
-[13:55:38.971]   ]
-[13:55:38.971] }
-[13:55:38.971] 
-[13:55:38.978] [31m✗[39m Build failed in 5.81s
-[13:55:38.978] [31merror during build:
-[13:55:38.979] [31m[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] There was an error during the build:
-[13:55:38.979]   Could not load /vercel/path0/node_modules/@supabase/supabase-js (imported by src/supabaseClient.js): ENOENT: no such file or directory, open '/vercel/path0/node_modules/@supabase/supabase-js'
-[13:55:38.979] Additionally, handling the error in the 'buildEnd' hook caused the following error:
-[13:55:38.979]   Could not load /vercel/path0/node_modules/@supabase/supabase-js (imported by src/supabaseClient.js): ENOENT: no such file or directory, open '/vercel/path0/node_modules/@supabase/supabase-js'[31m
-[13:55:38.980]     at getRollupError (file:///vercel/path0/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
-[13:55:38.980]     at file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:23246:39
-[13:55:38.980]     at async catchUnfinishedHookActions (file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:22705:16)
-[13:55:38.980]     at async rollupInternal (file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:23229:5)
-[13:55:38.981]     at async buildEnvironment (file:///vercel/path0/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:34125:12)
-[13:55:38.981]     at async Object.build (file:///vercel/path0/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:34480:19)
-[13:55:38.981]     at async Object.buildApp (file:///vercel/path0/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:34477:153)
-[13:55:38.981]     at async CAC.<anonymous> (file:///vercel/path0/node_modules/vite/dist/node/cli.js:642:3)[39m
-[13:55:39.046] Error: Command "npm run build" exited with 1
-[13:55:42.237] Exiting build container
+[plugin:vite:react-babel] F:\Proyectos\FAJAS V3\control-de-fajas\src\components\FajasTable.jsx: Unexpected token (93:2)
+  96 |     setSelectedFajas((prevSelected) =>
+F:/Proyectos/FAJAS V3/control-de-fajas/src/components/FajasTable.jsx:93:2
+91 |  
+92 |  const FajasTable = ({ fajas, handleEdit, handleDelete, activeTab, handleDeleteSelected }) => {
+93 |    const [selectedFajas, setSelectedFajas] = useState([]);
+   |    ^
+94 |  
+95 |    const handleSelect = (id) => {

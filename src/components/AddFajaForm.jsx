@@ -81,14 +81,16 @@ const AddFajaForm = ({ newFaja, handleInputChange, handleSubmit, companies }) =>
               />
             </Col>
             <Col md={2} className="d-flex align-items-center">
-              <Form.Check
-                type="checkbox"
+              <Form.Select
                 name="paid"
-                checked={newFaja.paid}
+                value={newFaja.paid}
                 onChange={handleInputChange}
-                label="Pagado"
-                id="paidCheck"
-              />
+                id="paidSelect"
+              >
+                <option value="false">No Pagado</option>
+                <option value="true">Pagado</option>
+                <option value="I">Gratis</option>
+              </Form.Select>
             </Col>
             <Col md={12} className="text-end">
               <Button type="submit" variant="primary">
