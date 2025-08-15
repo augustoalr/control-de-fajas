@@ -22,7 +22,7 @@ const FajasTable = ({ fajas, handleEdit, handleDelete, activeTab, handleDeleteSe
 
   const renderPaidStatus = (paid) => {
     if (paid === 'I') return 'Gratis';
-    if (String(paid) === 'true') return 'Si';
+     if (String(paid) === 'true' || paid === 'P') return 'Si';
     return 'No';
   };
 
@@ -81,7 +81,7 @@ const FajasTable = ({ fajas, handleEdit, handleDelete, activeTab, handleDeleteSe
                         <td>{faja.id}</td>
                         <td>{faja.clientName}</td>
                         <td>{faja.fecha}</td>
-                        <td>{faja.company}</td>
+                        <td>{faja.companies?.name}</td>
                         <td>{faja.model}</td>
                         <td>{faja.code}</td>
                         <td>{faja.size}</td>

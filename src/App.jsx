@@ -67,7 +67,7 @@ function App() {
 
   async function fetchFajas() {
     setLoading(true);
-    const { data, error } = await supabase.from('fajas').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('fajas').select('*, companies(name) ').order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching fajas:', error);
       toast.error('Error al cargar el inventario.');
