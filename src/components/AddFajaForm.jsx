@@ -44,11 +44,13 @@ const AddFajaForm = ({ newFaja, handleInputChange, handleSubmit, companies }) =>
                 name="company"
                 value={newFaja.company}
                 onChange={handleInputChange}
+                required
               >
-                <option value="">Selecciona una compañía</option>
-                {companies.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                <option value="">Selecciona una compañía...</option>
+                {/* --- CAMBIO AQUÍ --- */}
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
                   </option>
                 ))}
               </Form.Select>

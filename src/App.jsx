@@ -77,16 +77,27 @@ function App() {
     setLoading(false);
   }
 
-  async function fetchCompanies() {
-    const { data, error } = await supabase.from('companies').select('name');
-    if (error) {
-      console.error('Error fetching companies:', error);
-      toast.error('Error al cargar las compañías.');
-    } else {
-      setCompanies(data.map(c => c.name));
-    }
-  }
+  // async function fetchCompanies() {
+  //   const { data, error } = await supabase.from('companies').select('name');
+  //   if (error) {
+  //     console.error('Error fetching companies:', error);
+  //     toast.error('Error al cargar las compañías.');
+  //   } else {
+  //     setCompanies(data.map(c => c.name));
+  //   }
+  // }
 
+  async function fetchCompanies() {
+  const { data, error } = await supabase.from('companies').select('id, name'); // Pedimos id y name
+  if (error) {
+    console.error('Error fetching companies:', error);
+    toast.error('Error al cargar las compañías.');
+  } else {
+    setCompanies(data); // Guardamos el array de objetos completo
+  }
+}
+  
+  
   const filteredFajas = useMemo(() => {
     const stockFajas = fajas.filter(faja => String(faja.paid) === 'false' || faja.paid === null || faja.paid === undefined);
     const soldFajas = fajas.filter(faja => String(faja.paid) === 'true' || faja.paid === 'I' || faja.paid === 'P');
@@ -113,38 +124,85 @@ function App() {
     setEditingFaja(faja);
   };
 
+  //La q esta comentada funcionaba 
+  // const handleUpdate = async (e) => {
+  //   e.preventDefault();
+  //   const { id, ...fajaToUpdate } = editingFaja;
+  //   //Si la fecha esta vacía, envíala como null
+  //   fajaToUpdate.fecha = fajaToUpdate.fecha || null;
+
+  //   if (fajaToUpdate.paid === 'true') fajaToUpdate.paid = true;
+  //   else if (fajaToUpdate.paid === 'false') fajaToUpdate.paid = false;
+
+  //   // Actualizar la faja en la base de datos
+  //   const { error } = await supabase.from('fajas').update(fajaToUpdate).eq('id', id);
+  //   if (error) {
+  //     console.error('Error updating faja:', error);
+  //     toast.error('Error al actualizar la faja.');
+  //   } else {
+  //     toast.success('Faja actualizada con éxito.');
+  //     setEditingFaja(null);
+  //     fetchFajas(); // Re-fetch to update UI
+  //   }
+  // };
+
   const handleUpdate = async (e) => {
-    e.preventDefault();
-    const { id, ...fajaToUpdate } = editingFaja;
-    //Si la fecha esta vacía, envíala como null
-    fajaToUpdate.fecha = fajaToUpdate.fecha || null;
+  e.preventDefault();
+  const { id, ...fajaToUpdate } = editingFaja;
+  //Si la fecha esta vacía, envíala como null
+  fajaToUpdate.fecha = fajaToUpdate.fecha || null;
 
-    if (fajaToUpdate.paid === 'true') fajaToUpdate.paid = true;
-    else if (fajaToUpdate.paid === 'false') fajaToUpdate.paid = false;
+  if (fajaToUpdate.paid === 'true') fajaToUpdate.paid = true;
+  else if (fajaToUpdate.paid === 'false') fajaToUpdate.paid = false;
 
-    // Actualizar la faja en la base de datos
-    const { error } = await supabase.from('fajas').update(fajaToUpdate).eq('id', id);
-    if (error) {
-      console.error('Error updating faja:', error);
-      toast.error('Error al actualizar la faja.');
-    } else {
-      toast.success('Faja actualizada con éxito.');
-      setEditingFaja(null);
-      fetchFajas(); // Re-fetch to update UI
-    }
-  };
+  // -- CAMBIO AQUÍ: Eliminamos el objeto "companies" antes de enviar --
+  delete fajaToUpdate.companies;
+
+  // Actualizar la faja en la base de datos
+  const { error } = await supabase.from('fajas').update(fajaToUpdate).eq('id', id);
+  if (error) {
+    console.error('Error updating faja:', error);
+    toast.error('Error al actualizar la faja.');
+  } else {
+    toast.success('Faja actualizada con éxito.');
+    setEditingFaja(null);
+    fetchFajas(); // Re-fetch to update UI
+  }
+};
+  
+  
+  
+  // const handleInputChange = (e) => {
+  //   const { name, value, type, checked } = e.target;
+  //   let finalValue = type === 'checkbox' ? checked : value;
+  //   if (name === 'paid') {
+  //     if (value === 'true') finalValue = true;
+  //     else if (value === 'false') finalValue = false;
+  //     else finalValue = value; // Mantener 'I' como string
+  //   }
+  //   setNewFaja(prev => ({ ...prev, [name]: finalValue }));
+  // };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    let finalValue = type === 'checkbox' ? checked : value;
-    if (name === 'paid') {
-      if (value === 'true') finalValue = true;
-      else if (value === 'false') finalValue = false;
-      else finalValue = value; // Mantener 'I' como string
-    }
-    setNewFaja(prev => ({ ...prev, [name]: finalValue }));
-  };
+  const { name, value, type, checked } = e.target;
+  let finalValue = type === 'checkbox' ? checked : value;
 
+  // --- LÍNEA AÑADIDA ---
+  // Si el campo es 'company', convierte el valor a número
+  if (name === 'company') {
+    finalValue = parseInt(value, 10);
+  }
+
+  if (name === 'paid') {
+    if (value === 'true') finalValue = true;
+    else if (value === 'false') finalValue = false;
+    else finalValue = value;
+  }
+  setNewFaja(prev => ({ ...prev, [name]: finalValue }));
+};
+  
+  
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const fajaToInsert = { ...newFaja, fecha: newFaja.fecha || null };
