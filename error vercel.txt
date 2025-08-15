@@ -1,9 +1,0 @@
-[plugin:vite:react-babel] F:\Proyectos\FAJAS V3\control-de-fajas\src\components\FajasTable.jsx: Unexpected token (93:2)
-  96 |     setSelectedFajas((prevSelected) =>
-F:/Proyectos/FAJAS V3/control-de-fajas/src/components/FajasTable.jsx:93:2
-91 |  
-92 |  const FajasTable = ({ fajas, handleEdit, handleDelete, activeTab, handleDeleteSelected }) => {
-93 |    const [selectedFajas, setSelectedFajas] = useState([]);
-   |    ^
-94 |  
-95 |    const handleSelect = (id) => {

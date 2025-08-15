@@ -37,9 +37,32 @@ function App() {
   });
   const [activeTab, setActiveTab] = useState('stock');
 
+  // useEffect(() => {
+  //   fetchFajas();
+  //   fetchCompanies();
+  // }, []);
+
   useEffect(() => {
+    // 1. Carga los datos iniciales
     fetchFajas();
     fetchCompanies();
+
+    // 2. Se suscribe a los cambios en la tabla 'fajas'
+    const subscription = supabase
+      .channel('fajas-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fajas' }, (payload) => {
+        // Cuando el bot inserta un nuevo registro, se ejecuta esto:
+        console.log('Nuevo registro recibido:', payload.new);
+        toast.success('Nueva venta registrada por el bot!');
+        // Añade el nuevo registro al estado para que la UI se actualice al instante
+        setFajas((currentFajas) => [payload.new, ...currentFajas]);
+      })
+      .subscribe();
+
+    // 3. Se desuscribe al cerrar el componente para limpiar
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   async function fetchFajas() {
@@ -66,8 +89,7 @@ function App() {
 
   const filteredFajas = useMemo(() => {
     const stockFajas = fajas.filter(faja => String(faja.paid) === 'false' || faja.paid === null || faja.paid === undefined);
-    const soldFajas = fajas.filter(faja => String(faja.paid) === 'true' || faja.paid === 'I');
-
+    const soldFajas = fajas.filter(faja => String(faja.paid) === 'true' || faja.paid === 'I' || faja.paid === 'P');
     const filterLogic = (faja) => {
       const fajaDate = new Date(faja.fecha);
       const [year, month] = monthFilter.split('-');
