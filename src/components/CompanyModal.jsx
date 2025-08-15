@@ -1,47 +1,58 @@
 import React from 'react';
-import { Modal, Form, Button, InputGroup } from 'react-bootstrap';
+import { Modal, Button, Form, ListGroup } from 'react-bootstrap';
 
-const CompanyModal = ({ show, handleHide, newCompanyName, setNewCompanyName, handleCompanySubmit, companies, handleCompanyDelete }) => {
+const CompanyModal = ({ 
+  show, 
+  handleHide, 
+  newCompanyName, 
+  setNewCompanyName, 
+  handleCompanySubmit, 
+  companies, 
+  handleCompanyDelete 
+}) => {
   return (
-    <Modal
-      show={show}
-      onHide={handleHide}
-      centered
-    >
+    <Modal show={show} onHide={handleHide} centered>
       <Modal.Header closeButton>
         <Modal.Title>Gestionar Compañías</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit={handleCompanySubmit}>
-          <InputGroup className="mb-3">
+        <Form onSubmit={handleCompanySubmit} className="mb-3">
+          <Form.Group>
+            <Form.Label>Agregar Nueva Compañía</Form.Label>
             <Form.Control
               type="text"
+              placeholder="Nombre de la compañía"
               value={newCompanyName}
               onChange={(e) => setNewCompanyName(e.target.value)}
-              placeholder="Nombre de la nueva compañía"
+              required
             />
-            <Button variant="primary" type="submit">
-              Agregar
-            </Button>
-          </InputGroup>
+          </Form.Group>
+          <Button variant="primary" type="submit" className="mt-2">
+            Agregar
+          </Button>
         </Form>
-        <ul className="list-group">
-          {companies.map((c) => (
-            <li
-              key={c}
-              className="list-group-item d-flex justify-content-between align-items-center"
+        <hr />
+        <h5>Compañías Existentes</h5>
+        <ListGroup>
+          {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
+          {/* Ahora mapeamos el array de objetos y mostramos company.name */}
+          {companies.map((company) => (
+            <ListGroup.Item 
+              key={company.id} 
+              className="d-flex justify-content-between align-items-center"
             >
-              {c}
-              <Button
-                variant="outline-danger"
+              {company.name}
+              <Button 
+                variant="outline-danger" 
                 size="sm"
-                onClick={() => handleCompanyDelete(c)}
+                // El botón de borrar ahora pasa el nombre de la compañía
+                onClick={() => handleCompanyDelete(company.name)}
               >
                 Eliminar
               </Button>
-            </li>
+            </ListGroup.Item>
           ))}
-        </ul>
+        </ListGroup>
       </Modal.Body>
     </Modal>
   );
